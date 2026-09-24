@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0b1020" />
+<title>Alert Powietrzny PL/UA</title>
+<style>
+:root{color-scheme:dark;--bg:#080b13;--panel:#101522;--card:#151b2a;--text:#eef3ff;--muted:#9eabc3;--line:#263148;--accent:#69a7ff;--warn:#ffcc66;--danger:#ff6b6b;--ok:#54d39a;--ua:#f4c95d;--pl:#6fc2ff}*{box-sizing:border-box}body{margin:0;font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}button,input{font:inherit}button{cursor:pointer}.wrap{max-width:1500px;margin:auto;padding:16px}.top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}.title{font-size:24px;font-weight:800}.sub{color:var(--muted);max-width:900px}.pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:var(--panel)}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}.stat .k{color:var(--muted);font-size:12px}.stat .v{font-size:23px;font-weight:800;margin-top:3px}.main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.8fr);gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px}.head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.head h2{margin:0;font-size:16px}.muted{color:var(--muted)}.small{font-size:12px}.mapbox{position:relative;background:#0c1220;border:1px solid var(--line);border-radius:13px;overflow:hidden;min-height:520px}.mapbox svg{width:100%;height:520px;display:block}.marker{cursor:pointer;filter:drop-shadow(0 2px 3px #0008)}.marker:focus{outline:none}.marker circle,.marker path{stroke:#fff;stroke-width:1.4}.marker text{font-size:11px;fill:var(--text);paint-order:stroke;stroke:#070a12;stroke-width:3;stroke-linejoin:round}.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:12px}.timeline{margin-top:12px}.timeline input{width:100%}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px}.btn.primary{background:#163c72;border-color:#2d6fc0}.btn.danger{background:#4a1f28;border-color:#80313e}.feed{display:flex;flex-direction:column;gap:8px;max-height:390px;overflow:auto}.event{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px;cursor:pointer}.event:hover{border-color:#445371}.event .row{display:flex;justify-content:space-between;gap:10px}.badge{font-size:11px;padding:3px 7px;border-radius:999px;border:1px solid var(--line)}.badge.ua{color:#ffe084}.badge.pl{color:#8dd2ff}.detail dl{display:grid;grid-template-columns:130px 1fr;gap:7px 10px;margin:0}.detail dt{color:var(--muted)}.detail dd{margin:0}.callout{margin-top:10px;border-left:4px solid var(--warn);background:#302715;padding:10px;border-radius:8px}.callout.danger{border-color:var(--danger);background:#361b22}.source{word-break:break-word}.source a{color:#8fc1ff}.notif{display:grid;gap:9px}.toggle{display:flex;gap:8px;align-items:flex-start}.statusline{padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--card)}.offline{color:var(--warn)}.ok{color:var(--ok)}.dangerText{color:var(--danger)}.footer{color:var(--muted);font-size:12px;margin-top:14px}.mobileDetail{display:none}@media(max-width:980px){.grid4{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.mapbox{min-height:420px}.mapbox svg{height:420px}}@media(max-width:520px){.wrap{padding:10px}.grid4{grid-template-columns:1fr 1fr}.title{font-size:20px}.stat .v{font-size:18px}.mapbox,.mapbox svg{height:360px;min-height:360px}.detail dl{grid-template-columns:105px 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="title">Alert Powietrzny PL/UA</div><div class="sub">Cywilny monitoring publicznych alertów Polski i Ukrainy. Mapa pokazuje regiony objęte alarmem, nie dokładne pozycje ani trajektorie aktywnych obiektów bojowych.</div></div>
+    <div class="pill"><span id="liveDot">●</span> <span id="liveLabel">Łączenie…</span></div>
+  </div>
+
+  <div class="grid4">
+    <div class="stat"><div class="k">Aktywne alerty UA (zachód)</div><div class="v" id="uaCount">—</div></div>
+    <div class="stat"><div class="k">Stan RCB</div><div class="v" id="rcbState">—</div></div>
+    <div class="stat"><div class="k">Najbliższa strefa UA</div><div class="v" id="nearBand">—</div></div>
+    <div class="stat"><div class="k">Ostatnia aktualizacja</div><div class="v" id="updated">—</div></div>
+  </div>
+
+  <div class="main">
+    <div>
+      <section class="panel">
+        <div class="head"><div><h2>Mapa sytuacyjna</h2><div class="muted small">Kliknij znacznik, aby zobaczyć szczegóły.</div></div><div class="actions"><button class="btn" id="refresh">Odśwież</button><button class="btn" id="fit">Wycentruj</button></div></div>
+        <div class="mapbox"><svg id="map" viewBox="0 0 900 520" aria-label="Mapa Polski i Ukrainy"></svg></div>
+        <div class="legend"><span>● Ukraina — alert regionalny</span><span>◆ Polska — komunikat RCB</span><span>Odległość = strefa regionu względem granicy, nie dystans obiektu</span></div>
+      </section>
+
+      <section class="panel timeline">
+        <div class="head"><div><h2>Historia tej sesji</h2><div class="muted small" id="timeLabel">Bieżący stan</div></div><div class="actions"><button class="btn" id="play">▶ Odtwarzaj</button><button class="btn" id="live">Wróć do teraz</button></div></div>
+        <input id="timeline" type="range" min="0" max="0" value="0" step="1" aria-label="Oś czasu" />
+        <div class="muted small">Strona zapisuje lokalnie kolejne migawki alertów podczas działania. Pełne archiwum UA wymaga tokenu API.</div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="panel detail">
+        <div class="head"><h2>Szczegóły po kliknięciu</h2><span class="badge" id="detailBadge">Brak wyboru</span></div>
+        <div id="detailEmpty" class="muted">Wybierz znacznik na mapie lub wpis z listy.</div>
+        <div id="detailBody" hidden>
+          <dl>
+            <dt>Kategoria</dt><dd id="dCategory"></dd>
+            <dt>Obszar</dt><dd id="dRegion"></dd>
+            <dt>Od granicy PL</dt><dd id="dDistance"></dd>
+            <dt>Kierunek</dt><dd id="dDirection"></dd>
+            <dt>Czas</dt><dd id="dTime"></dd>
+            <dt>Źródło</dt><dd id="dSource" class="source"></dd>
+          </dl>
+          <div id="dCallout" class="callout"></div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:14px">
+        <div class="head"><h2>Komunikaty</h2><span class="small muted" id="feedCount"></span></div>
+        <div class="feed" id="feed"></div>
+      </section>
+
+      <section class="panel" style="margin-top:14px">
+        <div class="head"><h2>Powiadomienia</h2><span class="small muted" id="notifState">wyłączone</span></div>
+        <div class="notif">
+          <label class="toggle"><input type="checkbox" id="nBorder"><span>Alarm, gdy pojawi się alert w regionie granicznym Ukrainy (Wołyń/Lwów).</span></label>
+          <label class="toggle"><input type="checkbox" id="nRcb"><span>Alarm, gdy RCB publikuje aktywny komunikat o zagrożeniu z powietrza.</span></label>
+          <label class="toggle"><input type="checkbox" id="nUa"><span>Alarm o nowych alertach w zachodniej Ukrainie.</span></label>
+          <label class="toggle"><input type="checkbox" id="nSound"><span>Dźwięk przy nowym komunikacie.</span></label>
+          <div class="actions"><button class="btn primary" id="enableNotif">Włącz powiadomienia</button><button class="btn" id="testNotif">Test</button></div>
+          <div class="muted small">Powiadomienia przeglądarkowe działają pewnie, gdy strona jest otwarta. Push przy całkowicie zamkniętej stronie wymaga osobnego serwera push/subskrypcji.</div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:14px">
+        <div class="head"><h2>Źródła</h2></div>
+        <div class="small"><div><a href="https://www.gov.pl/web/rcb/komunikaty" target="_blank" rel="noreferrer">RCB / gov.pl</a> — komunikaty dla Polski.</div><div><a href="https://alerts.in.ua/" target="_blank" rel="noreferrer">alerts.in.ua</a> — alerty Ukrainy; API wymaga tokenu.</div><div><a href="https://mapa.ua/" target="_blank" rel="noreferrer">MAPA.UA</a> — zewnętrzna mapa/archiwum do ręcznej weryfikacji.</div></div>
+      </section>
+    </aside>
+  </div>
+  <div class="footer">To narzędzie nie zastępuje Alertu RCB, komunikatów Dowództwa Operacyjnego ani ukraińskich służb alarmowych. Nie używaj go jako jedynego źródła informacji o bezpieczeństwie.</div>
+</div>
+<script type="module">
+import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm';
+import * as topojson from 'https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm';
+import world from 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json/+esm';
+
+const $ = id => document.getElementById(id);
+const state = { data:null, selected:null, snapshots:[], snapshotIndex:0, timer:null, playTimer:null, prevKeys:new Set() };
+const prefs = JSON.parse(localStorage.getItem('alertplua-prefs') || '{}');
+for (const id of ['nBorder','nRcb','nUa','nSound']) $(id).checked = !!prefs[id];
+['nBorder','nRcb','nUa','nSound'].forEach(id => $(id).addEventListener('change', savePrefs));
+function savePrefs(){ const p={}; ['nBorder','nRcb','nUa','nSound'].forEach(id=>p[id]=$(id).checked); localStorage.setItem('alertplua-prefs',JSON.stringify(p)); }
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
+const countries = topojson.feature(world, world.objects.countries).features;
+const regionFeatures = countries.filter(f => { const c=d3.geoCentroid(f); return c[0]>12 && c[0]<42 && c[1]>43 && c[1]<57; });
+const focus = {type:'FeatureCollection',features:countries.filter(f=>['616','804'].includes(String(f.id)))};
+const projection = d3.geoMercator().fitExtent([[25,25],[875,495]], focus);
+const path = d3.geoPath(projection);
+const svg = d3.select('#map');
+svg.append('rect').attr('width',900).attr('height',520).attr('fill','#0c1220');
+const mapLayer = svg.append('g');
+mapLayer.selectAll('path.country').data(regionFeatures).join('path').attr('class','country').attr('d',path).attr('fill',d=>String(d.id)==='616'?'#18293f':String(d.id)==='804'?'#2b2816':'#131a27').attr('stroke','#34415d').attr('stroke-width',.8);
+const labelLayer = svg.append('g');
+[['POLSKA',19.2,52.0],['UKRAINA',31.3,48.8],['BIAŁORUŚ',28.1,53.5],['SŁOWACJA',19.4,48.7],['RUMUNIA',25.0,46.7]].forEach(([n,lon,lat])=>{const p=projection([lon,lat]); labelLayer.append('text').attr('x',p[0]).attr('y',p[1]).attr('text-anchor','middle').attr('fill','#8190aa').attr('font-size',12).text(n)});
+const markerLayer = svg.append('g');
+
+function formatTime(v){ if(!v) return 'brak'; const d=new Date(v); return Number.isNaN(d.getTime())?String(v):d.toLocaleString('pl-PL'); }
+function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function allEvents(data){
+  const out=[];
+  for(const x of (data?.ua?.items||[])) out.push({...x, key:x.id, kind:'UA'});
+  if(data?.rcb?.found){
+    const regions=data.rcb.regions?.length?data.rcb.regions:[{name:'Polska',lat:52.1,lon:19.4}];
+    regions.forEach((r,i)=>out.push({key:`rcb-${i}`,kind:'PL',country:'PL',region:r.name,lat:r.lat,lon:r.lon,category:data.rcb.active?'Aktywny komunikat RCB':'Najnowszy komunikat RCB',distanceBandToPoland:'na terytorium Polski',direction:'Nie dotyczy',startedAt:data.rcb.date,source:'Rządowe Centrum Bezpieczeństwa',sourceUrl:data.rcb.source,active:data.rcb.active,note:data.rcb.statusText}));
+  }
+  return out;
+}
+function markerColor(e){return e.kind==='PL'?'#6fc2ff':'#f4c95d'}
+function drawMarkers(data){
+  markerLayer.selectAll('*').remove();
+  const events=allEvents(data);
+  for(const e of events){ const p=projection([e.lon,e.lat]); if(!p)continue; const g=markerLayer.append('g').attr('class','marker').attr('tabindex',0).attr('transform',`translate(${p[0]},${p[1]})`).on('click',()=>selectEvent(e)).on('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectEvent(e)}}); if(e.kind==='PL') g.append('path').attr('d','M0,-9 L9,0 L0,9 L-9,0 Z').attr('fill',markerColor(e)); else g.append('circle').attr('r',8).attr('fill',markerColor(e)); g.append('text').attr('x',12).attr('y',4).text(e.region.replace('Obwód ','').replace('Woj. ','')); }
+}
+function selectEvent(e){ state.selected=e; $('detailEmpty').hidden=true; $('detailBody').hidden=false; $('detailBadge').textContent=e.kind==='PL'?'POLSKA':'UKRAINA'; $('detailBadge').className='badge '+(e.kind==='PL'?'pl':'ua'); $('dCategory').textContent=e.category||'Zagrożenie powietrzne'; $('dRegion').textContent=e.region||'—'; $('dDistance').textContent=e.distanceBandToPoland||'—'; $('dDirection').textContent=e.direction||'Brak danych'; $('dTime').textContent=formatTime(e.startedAt||e.updatedAt); $('dSource').innerHTML=e.sourceUrl?`<a href="${escapeHtml(e.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(e.source||'Źródło')}</a>`:escapeHtml(e.source||'—'); const c=$('dCallout'); if(e.kind==='UA'){ const near=/0–50/.test(e.distanceBandToPoland||''); c.className='callout '+(near?'danger':''); c.textContent=near?'Alert obejmuje region graniczący z Polską. Może to oznaczać zagrożenie zbliżające się do polskiej przestrzeni, ale sam alert regionalny NIE potwierdza pozycji obiektu ani przekroczenia granicy. Śledź komunikaty RCB i polskich służb.':'Odległość dotyczy regionu objętego alertem, nie konkretnego drona lub pocisku. Nie ma podstaw do wyliczania dokładnej trajektorii z tych danych.';} else {c.className='callout '+(e.active?'danger':''); c.textContent=e.note||'Oficjalny komunikat RCB dla Polski.';} }
+function renderFeed(data){ const events=allEvents(data); $('feedCount').textContent=`${events.length} wpisów`; $('feed').innerHTML=events.length?'':'<div class="muted">Brak bieżących wpisów.</div>'; events.sort((a,b)=>new Date(b.startedAt||0)-new Date(a.startedAt||0)).forEach(e=>{const div=document.createElement('div'); div.className='event'; div.innerHTML=`<div class="row"><strong>${escapeHtml(e.region)}</strong><span class="badge ${e.kind==='PL'?'pl':'ua'}">${e.kind}</span></div><div>${escapeHtml(e.category||'Alert')}</div><div class="small muted">${escapeHtml(e.kind==='UA'?'Strefa do granicy PL: '+(e.distanceBandToPoland||'—'):(e.note||''))}</div>`; div.addEventListener('click',()=>selectEvent(e)); $('feed').appendChild(div); }); }
+function renderStats(data){ const ua=data?.ua?.items||[]; $('uaCount').textContent=data?.ua?.configured===false?'API niepodłączone':String(ua.length); $('rcbState').textContent=data?.rcb?.active?'AKTYWNY':'brak aktywnego'; $('rcbState').className='v '+(data?.rcb?.active?'dangerText':'ok'); const bands=ua.map(x=>x.distanceBandToPoland); $('nearBand').textContent=bands.includes('0–50 km')?'0–50 km':bands[0]||'—'; $('updated').textContent=data?.generatedAt?new Date(data.generatedAt).toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}):'—'; $('liveLabel').textContent='Dane odświeżone'; $('liveDot').style.color='#54d39a'; }
+function snapshot(data){ const entry={ts:Date.now(),data}; state.snapshots.push(entry); if(state.snapshots.length>30)state.snapshots.shift(); state.snapshotIndex=state.snapshots.length-1; $('timeline').max=Math.max(0,state.snapshots.length-1); $('timeline').value=state.snapshotIndex; localStorage.setItem('alertplua-history',JSON.stringify(state.snapshots.slice(-12))); updateTimeLabel(); }
+function updateTimeLabel(){ const e=state.snapshots[state.snapshotIndex]; $('timeLabel').textContent=e?new Date(e.ts).toLocaleString('pl-PL'):'Bieżący stan'; }
+function render(data){ state.data=data; drawMarkers(data); renderFeed(data); renderStats(data); }
+function notify(title,body){ if($('nSound').checked){ try{const a=new AudioContext();const o=a.createOscillator();const g=a.createGain();o.connect(g);g.connect(a.destination);g.gain.value=.04;o.frequency.value=740;o.start();o.stop(a.currentTime+.13)}catch{} } if(Notification.permission==='granted') new Notification(title,{body,tag:title}); }
+function evaluateNotifications(data){ const events=allEvents(data); const keys=new Set(events.map(e=>e.key+':' +(e.active??true))); if(state.prevKeys.size){ for(const e of events){ const k=e.key+':' +(e.active??true); if(state.prevKeys.has(k))continue; if(e.kind==='PL' && e.active && $('nRcb').checked) notify('Alert RCB',e.note||e.category); if(e.kind==='UA' && $('nUa').checked) notify('Nowy alert — zachodnia Ukraina',`${e.region}: ${e.category}`); if(e.kind==='UA' && e.borderRegion && $('nBorder').checked) notify('Alert przy granicy Polski',`${e.region}: ${e.category}. Region graniczy z Polską.`); } } state.prevKeys=keys; }
+async function load(){ $('liveLabel').textContent='Odświeżanie…'; $('liveDot').style.color='#ffcc66'; try{ const r=await fetch('/api/alerts',{cache:'no-store'}); if(!r.ok)throw new Error('HTTP '+r.status); const data=await r.json(); evaluateNotifications(data); render(data); snapshot(data); }catch(err){ $('liveLabel').textContent='Błąd danych'; $('liveDot').style.color='#ff6b6b'; $('feed').innerHTML=`<div class="statusline offline">Nie udało się pobrać danych: ${escapeHtml(err.message)}</div>`; } }
+
+$('refresh').addEventListener('click',load); $('fit').addEventListener('click',()=>{}); $('timeline').addEventListener('input',()=>{ state.snapshotIndex=Number($('timeline').value); updateTimeLabel(); const e=state.snapshots[state.snapshotIndex]; if(e)render(e.data); }); $('live').addEventListener('click',()=>{state.snapshotIndex=state.snapshots.length-1;$('timeline').value=state.snapshotIndex;updateTimeLabel();if(state.snapshots[state.snapshotIndex])render(state.snapshots[state.snapshotIndex].data)}); $('play').addEventListener('click',()=>{ if(state.playTimer){clearInterval(state.playTimer);state.playTimer=null;$('play').textContent='▶ Odtwarzaj';return;} $('play').textContent='⏸ Pauza'; state.playTimer=setInterval(()=>{let i=state.snapshotIndex+1;if(i>=state.snapshots.length){clearInterval(state.playTimer);state.playTimer=null;$('play').textContent='▶ Odtwarzaj';return;}state.snapshotIndex=i;$('timeline').value=i;updateTimeLabel();render(state.snapshots[i].data)},900); });
+$('enableNotif').addEventListener('click',async()=>{ if(!('Notification'in window)){alert('Ta przeglądarka nie obsługuje powiadomień.');return;} const p=await Notification.requestPermission(); $('notifState').textContent=p==='granted'?'włączone':p; }); $('testNotif').addEventListener('click',()=>{ if(Notification.permission==='granted')notify('Test Alert PL/UA','Powiadomienia działają.'); else alert('Najpierw włącz powiadomienia.'); });
+$('notifState').textContent=('Notification'in window)?Notification.permission:'brak obsługi';
+try{const h=JSON.parse(localStorage.getItem('alertplua-history')||'[]'); if(Array.isArray(h)){state.snapshots=h.slice(-12);state.snapshotIndex=Math.max(0,state.snapshots.length-1);$('timeline').max=Math.max(0,state.snapshots.length-1);$('timeline').value=state.snapshotIndex;}}catch{}
+await load(); state.timer=setInterval(load,60000);
+</script>
+</body>
+</html>
